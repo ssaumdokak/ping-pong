@@ -1,0 +1,101 @@
+import pygame
+import random
+
+# Инициализация pygame
+pygame.init()
+
+# Константы
+WIDTH, HEIGHT = 800, 600
+BALL_SPEED = 5
+PADDLE_SPEED = 10
+
+# Цвета
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Создание окна
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Пинг-понг")
+
+# Создание мяча
+ball = pygame.Rect(WIDTH // 2 - 15, HEIGHT // 2 - 15, 30, 30)
+ball_speed_x = BALL_SPEED * random.choice((1, -1))
+ball_speed_y = BALL_SPEED * random.choice((1, -1))
+
+# Создание ракеток
+paddle_a = pygame.Rect(50, HEIGHT // 2 - 60, 10, 120)
+paddle_b = pygame.Rect(WIDTH - 60, HEIGHT // 2 - 60, 10, 120)
+
+# Счёт
+score_a = 0
+score_b = 0
+font = pygame.font.Font(None, 36)
+
+# Добавление меню
+menu_font = pygame.font.Font(None, 72)
+menu_text = menu_font.render("SPACE для старта", True, WHITE)
+menu_text_rect = menu_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+
+game_active = False
+
+# Основной цикл игры
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        if not game_active:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                game_active = True
+
+    if game_active:
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w] and paddle_a.top > 0:
+            paddle_a.y -= PADDLE_SPEED
+        if keys[pygame.K_s] and paddle_a.bottom < HEIGHT:
+            paddle_a.y += PADDLE_SPEED
+        if keys[pygame.K_UP] and paddle_b.top > 0:
+            paddle_b.y -= PADDLE_SPEED
+        if keys[pygame.K_DOWN] and paddle_b.bottom < HEIGHT:
+            paddle_b.y += PADDLE_SPEED
+
+        ball.x += ball_speed_x
+        ball.y += ball_speed_y
+
+        # Обработка столкновения мяча с ракетками
+        if ball.colliderect(paddle_a) or ball.colliderect(paddle_b):
+            ball_speed_x *= -1
+
+        # Проверка на выход мяча за границы экрана
+        if ball.top <= 0 or ball.bottom >= HEIGHT:
+            ball_speed_y *= -1
+
+        # Очки
+        if ball.left <= 0:
+            score_b += 1
+            ball = pygame.Rect(WIDTH // 2 - 15, HEIGHT // 2 - 15, 30, 30)
+            ball_speed_x = BALL_SPEED * random.choice((1, -1))
+            ball_speed_y = BALL_SPEED * random.choice((1, -1))
+
+        if ball.right >= WIDTH:
+            score_a += 1
+            ball = pygame.Rect(WIDTH // 2 - 15, HEIGHT // 2 - 15, 30, 30)
+            ball_speed_x = BALL_SPEED * random.choice((1, -1))
+            ball_speed_y = BALL_SPEED * random.choice((1, -1))
+
+    # Отрисовка
+    screen.fill(BLACK)
+    pygame.draw.rect(screen, WHITE, paddle_a)
+    pygame.draw.rect(screen, WHITE, paddle_b)
+    pygame.draw.ellipse(screen, WHITE, ball)
+    pygame.draw.aaline(screen, WHITE, (WIDTH // 2, 0), (WIDTH // 2, HEIGHT))
+
+    if not game_active:
+        screen.blit(menu_text, menu_text_rect)
+
+    # Отображение счёта
+    score_display = font.render(f"{score_a} - {score_b}", True, WHITE)
+    screen.blit(score_display, (WIDTH // 2 - 18, 10))
+
+    pygame.display.flip()
+    pygame.time.delay(30)
